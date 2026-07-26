@@ -41,7 +41,7 @@ coverage.xml
 htmlcov/
 
 # Python version (optional)
-.python-version
+# .python-version
 
 # Local databases
 *.db
