@@ -1,98 +1,294 @@
 # ClaimForge AI — Multi-Agent Insurance Adjudication System
 
-Production Python project converted from the ClaimForge Colab notebook. An agentic RAG system built with **LangGraph**, **Groq**, **Chroma DB**, and **Streamlit** to evaluate insurance claims against Indian policy, endorsement, and regulatory documents.
+A production-ready **Agentic Retrieval-Augmented Generation (RAG)** system for automated insurance claim adjudication. Built using **LangGraph**, **Groq LLM**, **ChromaDB**, and **Streamlit**, the system evaluates insurance claims against Indian insurance policy documents, endorsements, and regulatory guidelines.
+
+---
 
 ## Features
 
-- Agentic RAG pipeline: retrieve → grade → rewrite → adjudicate
-- Tavily web fallback when local policy context is insufficient
-- Hallucination / grounding guardrails before final output
-- Human escalation for low-confidence or ungrounded decisions
-- CLI entry point (`python app.py`) and optional Streamlit UI
+- Multi-Agent RAG workflow using LangGraph
+- Intelligent document retrieval using ChromaDB
+- Query rewriting for improved retrieval accuracy
+- Tavily web search fallback when local context is insufficient
+- Hallucination detection and grounding verification
+- Human escalation for low-confidence decisions
+- Interactive CLI and Streamlit web interface
+- Automatic PDF ingestion and vector database creation
 
-## Project structure
+---
+
+# Project Structure
 
 ```text
 .
-├── app.py                      # Entry point
-├── config/settings.py          # API keys, paths, thresholds
-├── schemas/models.py           # Pydantic output schemas
+├── app.py                      # Main application entry point
+├── config/
+│   └── settings.py             # Configuration and API settings
+├── schemas/
+│   └── models.py               # Pydantic schemas
 ├── prompts/                    # Prompt templates
-├── rag/                        # Ingest, retriever, LLM engine, chains, bootstrap
-├── nodes/                      # LangGraph node functions
-├── graph/                      # State + workflow assembly
-├── utils/generate_sample_pdfs.py
-├── ui/streamlit_app.py         # Streamlit dashboard
-├── data/                       # policies / endorsements / regulations
-├── vector_db/                  # Chroma persistence (gitignored)
-└── tests/
+├── rag/                        # RAG engine and retriever
+├── nodes/                      # LangGraph nodes
+├── graph/                      # Workflow graph
+├── ui/
+│   └── streamlit_app.py        # Streamlit UI
+├── utils/
+│   └── generate_sample_pdfs.py
+├── data/                       # Insurance documents
+├── vector_db/                  # Chroma Vector Database
+├── tests/                      # Test cases
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md
 ```
 
-## Setup
+---
+
+# Prerequisites
+
+Before starting, ensure you have:
+
+- Python **3.12**
+- Git
+- A Groq API Key
+- A Tavily API Key
+
+---
+
+# Installation
+
+## 1. Clone the Repository
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+git clone https://github.com/<your-username>/Agentic-InsuranceClaims.git
+cd Agentic-InsuranceClaims
+```
+
+---
+
+## 2. Create a Virtual Environment
+
+```bash
+python3.12 -m venv .venv
+```
+
+---
+
+## 3. Activate the Virtual Environment
+
+### macOS / Linux
+
+```bash
+source .venv/bin/activate
+```
+
+### Windows
+
+```bash
+.venv\Scripts\activate
+```
+
+---
+
+## 4. Upgrade pip
+
+```bash
+pip install --upgrade pip
+```
+
+---
+
+## 5. Install Dependencies
+
+```bash
 pip install -r requirements.txt
-cp .env.example .env               # then edit with your API keys
 ```
 
-Required environment variables:
+---
 
-- `GROQ_API_KEY` — Groq chat model access
-- `TAVILY_API_KEY` — web-search fallback
-- `LLM_MODEL_NAME` — optional (default: `llama-3.1-8b-instant`)
+## 6. Configure Environment Variables
 
-## Run
+Copy the sample environment file.
+
+### macOS / Linux
 
 ```bash
-# Interactive CLI adjudication
+cp .env.example .env
+```
+
+### Windows
+
+```cmd
+copy .env.example .env
+```
+
+Open the `.env` file and add your API keys.
+
+```env
+GROQ_API_KEY=your_groq_api_key
+TAVILY_API_KEY=your_tavily_api_key
+
+# Optional
+LLM_MODEL_NAME=llama-3.1-8b-instant
+```
+
+---
+
+# Running the Project
+
+## Interactive Command Line
+
+```bash
 python app.py
+```
 
-# One-shot claim
+---
+
+## Run with a Claim
+
+```bash
 python app.py --claim "My home flooded during monsoon; walls need repair under Bharat Griha Raksha."
+```
 
-# Generate sample PDFs / rebuild vector store
+---
+
+## Generate Sample Insurance Documents
+
+```bash
 python app.py --generate-pdfs
-python app.py --ingest
+```
 
-# Streamlit UI
+---
+
+## Build the Vector Database
+
+```bash
+python app.py --ingest
+```
+
+---
+
+## Launch Streamlit Dashboard
+
+```bash
 python app.py --ui
 ```
 
-On first claim run, the app generates sample PDFs (if missing) and builds the Chroma vector store automatically.
+---
 
-## Architecture
+# First-Time Execution
+
+On the first run, the application will automatically:
+
+- Generate sample insurance PDFs (if they do not exist)
+- Create document embeddings
+- Build the Chroma vector database
+- Load the retrieval pipeline
+
+Subsequent runs will reuse the existing vector database, resulting in much faster startup.
+
+---
+
+# System Architecture
 
 ```text
-User Claim → Retrieve Context → Relevance Grader
-                                     │
-                 ┌───────────────────┴───────────────────┐
-                 ▼ (Relevant)                            ▼ (Irrelevant)
-            Adjudication                           Rewrite Query
-                 │                                       │
-                 ▼                                       ▼
-        Hallucination Check                      Retry Limit Exceeded?
-                 │                                ├─ No  → Retrieve
-                 ▼                                └─ Yes → Tavily Web Search
-     Confidence & Grounding Pass?                               │
-        ├─ Yes → Final Output                                   └→ Adjudication
-        └─ No  → Human Escalation
+                          User Claim
+                               │
+                               ▼
+                    Retrieve Relevant Context
+                               │
+                               ▼
+                     Relevance Grading Agent
+                  ┌────────────┴────────────┐
+                  │                         │
+            Relevant                  Not Relevant
+                  │                         │
+                  ▼                         ▼
+       Claim Adjudication          Query Rewriter
+                  │                         │
+                  ▼                         ▼
+      Hallucination Detection      Retrieve Again
+                  │                         │
+                  ▼                         ▼
+         Confidence Evaluation      Retry Limit Reached?
+                  │                         │
+          ┌───────┴────────┐         ┌──────┴──────┐
+          │                │         │             │
+      High Confidence   Low Confidence      Tavily Search
+          │                │                 │
+          ▼                ▼                 ▼
+     Final Decision   Human Escalation  Claim Adjudication
 ```
 
-## Tests
+---
+
+# Running Tests
 
 ```bash
 python tests/test_rag_adjudication.py
+```
+
+```bash
 python tests/test_nodes_pipeline.py
 ```
 
-Ensure PDFs are generated and ingested before running tests.
+Ensure the PDFs have been generated and the vector database has been created before running the tests.
 
-## Notes
+---
 
-- Colab secrets (`google.colab.userdata`) are replaced by `.env` / environment variables.
-- Embedding model remains `all-MiniLM-L6-v2`; the Groq chat model is configured via `LLM_MODEL_NAME` (the notebook incorrectly reused the embedding model id for ChatGroq).
-- Placeholder API key values (including those from `.env.example`) are rejected; set real keys before running adjudication.
-- `vector_db/.gitkeep` is ignored when deciding whether ingestion is needed.
-# Test
+# Technologies Used
+
+- Python 3.12
+- LangGraph
+- LangChain
+- Groq LLM
+- ChromaDB
+- HuggingFace Embeddings
+- Sentence Transformers
+- Streamlit
+- Tavily Search
+- Pydantic
+- ReportLab
+
+---
+
+# Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| GROQ_API_KEY | ✅ | Groq LLM API Key |
+| TAVILY_API_KEY | ✅ | Tavily Search API Key |
+| LLM_MODEL_NAME | Optional | Override the default Groq model |
+
+---
+
+# Notes
+
+- API keys are loaded from the `.env` file.
+- Never commit your `.env` file to GitHub.
+- The `vector_db` directory is automatically created after ingestion.
+- The project uses the **all-MiniLM-L6-v2** embedding model.
+- The default Groq model can be changed using `LLM_MODEL_NAME`.
+
+---
+
+# Git Ignore
+
+The following files and folders should **not** be committed:
+
+```text
+.venv/
+.env
+__pycache__/
+vector_db/
+*.pyc
+.vscode/
+.idea/
+```
+
+---
+
+# License
+
+This project is developed for educational and research purposes.
