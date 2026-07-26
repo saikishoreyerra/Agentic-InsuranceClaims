@@ -1,0 +1,51 @@
+# Python byte-code / cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Environment variables & keys
+.env
+*.env
+!.env.example
+
+# Vector database local storage
+vector_db/*
+!vector_db/.gitkeep
+*.sqlite3
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE / system
+.idea/
+.vscode/
+.DS_Store
+
+# Notebooks / Colab exports
+*.ipynb_checkpoints/
+
+# Logs
+*.log
+logs/
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# Python version (optional)
+.python-version
+
+# Local databases
+*.db
+
+# Temporary files
+*.tmp
+*.bak
