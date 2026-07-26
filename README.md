@@ -61,7 +61,7 @@ Before starting, ensure you have:
 ## 1. Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/Agentic-InsuranceClaims.git
+git clone https://github.com/saikishoreyerra/Agentic-InsuranceClaims
 cd Agentic-InsuranceClaims
 ```
 
